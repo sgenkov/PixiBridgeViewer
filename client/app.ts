@@ -47,6 +47,7 @@ const contentContainer = new PIXI.Container();
 contentContainer.position.set(20, 80);
 
 const lines: InstanceType<typeof PIXI.Text>[] = [];
+const payloadMap = new Map<string, unknown>();
 
 function setStatus(text: string, ok: boolean): void {
   statusText.text = `Status: ${text}`;
@@ -66,9 +67,22 @@ function stringifyValue(value: unknown): string {
   return String(value);
 }
 
-function renderPayload(payload: Record<string, unknown> | null): void {
-  const entries: [string, any][] = Object.entries(payload || {});
-  console.log('renderPayload', payload, entries);
+function mergePayload(payload: Record<string, unknown> | null): void {
+  if (!payload) {
+    return;
+  }
+  for (const [key, value] of Object.entries(payload)) {
+    if (value === null) {
+      payloadMap.delete(key);
+      continue;
+    }
+    payloadMap.set(key, value);
+  }
+}
+
+function renderPayload(): void {
+  const entries = Array.from(payloadMap.entries());
+  console.log('renderPayload', entries);
   const list: string[] = entries.length
     ? entries.map(([key, value]) => `${key}: ${stringifyValue(value)}`)
     : ['No payload received yet'];
@@ -106,7 +120,8 @@ function connect(): void {
     try {
       const data = JSON.parse(event.data);
       if (data && data.payload) {
-        renderPayload(data.payload as Record<string, unknown>);
+        mergePayload(data.payload as Record<string, unknown>);
+        renderPayload();
       }
     } catch {
       // ignore invalid messages
@@ -119,7 +134,7 @@ async function start(): Promise<void> {
   app.stage.addChild(titleText);
   app.stage.addChild(statusText);
   app.stage.addChild(contentContainer);
-  renderPayload(null);
+  renderPayload();
   connect();
 }
 

@@ -39,6 +39,7 @@ statusText.position.set(20, 44);
 const contentContainer = new PIXI.Container();
 contentContainer.position.set(20, 80);
 const lines = [];
+const payloadMap = new Map();
 function setStatus(text, ok) {
     statusText.text = `Status: ${text}`;
     statusText.style = new PIXI.TextStyle({
@@ -55,9 +56,21 @@ function stringifyValue(value) {
     }
     return String(value);
 }
-function renderPayload(payload) {
-    const entries = Object.entries(payload || {});
-    console.log('renderPayload', payload, entries);
+function mergePayload(payload) {
+    if (!payload) {
+        return;
+    }
+    for (const [key, value] of Object.entries(payload)) {
+        if (value === null) {
+            payloadMap.delete(key);
+            continue;
+        }
+        payloadMap.set(key, value);
+    }
+}
+function renderPayload() {
+    const entries = Array.from(payloadMap.entries());
+    console.log('renderPayload', entries);
     const list = entries.length
         ? entries.map(([key, value]) => `${key}: ${stringifyValue(value)}`)
         : ['No payload received yet'];
@@ -91,7 +104,8 @@ function connect() {
         try {
             const data = JSON.parse(event.data);
             if (data && data.payload) {
-                renderPayload(data.payload);
+                mergePayload(data.payload);
+                renderPayload();
             }
         }
         catch {
@@ -104,7 +118,7 @@ async function start() {
     app.stage.addChild(titleText);
     app.stage.addChild(statusText);
     app.stage.addChild(contentContainer);
-    renderPayload(null);
+    renderPayload();
     connect();
 }
 start();
