@@ -113,20 +113,6 @@ function connect(): void {
   socket.addEventListener('open', () => setStatus('connected', true));
   socket.addEventListener('close', () => setStatus('disconnected', false));
   socket.addEventListener('error', () => setStatus('error', false));
-  socket.onmessage = (event) => {
-    console.log('event', event.data);
-    // debugger
-  }
-  socket.onclose = () => {
-    console.log('close');
-  }
-
-  socket.onerror = (event) => {
-    console.log('error', event);
-  }
-  socket.onopen = () => {
-    console.log('open');
-  }
 
   socket.addEventListener('message', (event) => {
     try {

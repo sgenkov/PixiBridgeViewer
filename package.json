@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n CLIENT,SERVER \"npm run watch\" \"nodemon server/index.js\"",
+    "dev": "concurrently --kill-others-on-fail -n CLIENT,SERVER,BROWSER \"npm run watch\" \"nodemon server/index.js\" \"start \\\"\\\" chrome --new-window http://localhost:8787/\"",
     "start": "node server/index.js",
     "send": "node server/sender-example.js",
     "build": "tsc -p client/tsconfig.json",
