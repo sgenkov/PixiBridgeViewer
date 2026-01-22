@@ -1,4 +1,4 @@
-function colorfulLog(...args: string[]): void {
+export function colorfulLog(...args: string[]): void {
     const predefinedColors: Map<string, string> = new Map<string, string>([
         ['red', '#ff0000'],
         ['lightred', '#ff5454'],
@@ -62,3 +62,12 @@ function colorfulLog(...args: string[]): void {
         ...args,
     );
 }
+export function stringifyValue(value: unknown): string {
+    if (value === null || value === undefined) {
+      return String(value);
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
+  }

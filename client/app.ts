@@ -1,4 +1,5 @@
 import { titleStyle, statusStyle, valueStyle } from "./config.js";
+import { stringifyValue } from "./utils.js";
 
 const app = new PIXI.Application();
 (window as any)['__PIXI_APP__'] = app;
@@ -8,7 +9,6 @@ async function initPixi(): Promise<void> {
     background: '#0b0f1a',
     resizeTo: window,
     antialias: true,
-    // resolution: 4,
   });
 
   const root = document.getElementById('app');
@@ -16,21 +16,14 @@ async function initPixi(): Promise<void> {
     return;
   }
   root.appendChild(app.canvas);
-  // window.addEventListener('keydown', ({key}) => {
-  //   if (key === 'm') {
-  //     console.log('MAP: ', payloadMap)
-  //   }
-  // });
-  window.addEventListener('keydown', ({ key }) => {
-    if (key === '/') {
-      payloadMap.clear();
-      renderPayload();
+  window.addEventListener('keydown', ({key}) => {
+    if (key === 'm') {
+      console.log('MAP: ', payloadMap)
     }
-});
+  });
 }
 
 function layout(e?: any): void {
-  console.log('layout', app.canvas.width, app.canvas.height);
   app.stage.scale.set(app.canvas.width / 800);
   // const { width } = app.screen;
   // const titleX = Math.max(20, (width - titleText.width) / 2);
@@ -71,15 +64,15 @@ function setStatus(text: string, ok: boolean): void {
   });
 }
 
-function stringifyValue(value: unknown): string {
-  if (value === null || value === undefined) {
-    return String(value);
-  }
-  if (typeof value === 'object') {
-    return JSON.stringify(value);
-  }
-  return String(value);
-}
+// function stringifyValue(value: unknown): string {
+//   if (value === null || value === undefined) {
+//     return String(value);
+//   }
+//   if (typeof value === 'object') {
+//     return JSON.stringify(value);
+//   }
+//   return String(value);
+// }
 
 function mergePayload(payload: Record<string, unknown> | null): void {
   if (!payload) {
