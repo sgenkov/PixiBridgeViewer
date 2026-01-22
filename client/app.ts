@@ -7,7 +7,8 @@ async function initPixi(): Promise<void> {
   await app.init({
     background: '#0b0f1a',
     resizeTo: window,
-    antialias: true
+    antialias: true,
+    // resolution: 4,
   });
 
   const root = document.getElementById('app');
@@ -28,15 +29,35 @@ async function initPixi(): Promise<void> {
 });
 }
 
+function layout(e?: any): void {
+  console.log('layout', app.canvas.width, app.canvas.height);
+  app.stage.scale.set(app.canvas.width / 800);
+  // const { width } = app.screen;
+  // const titleX = Math.max(20, (width - titleText.width) / 2);
+  // const statusX = Math.max(20, (width - statusText.width) / 2);
+
+  // titleText.position.set(titleX, 16);
+  // statusText.position.set(statusX, 44);
+  // contentContainer.position.set(20, 80);
+
+}
+
+function initStuff(): void {
+  app.renderer.on('resize', (e) => layout(e));
+  layout();
+}
+
 
 const titleText = new PIXI.Text({ text: 'Pixi Bridge Viewer', style: titleStyle });
 titleText.label = 'titleText';
 titleText.position.set(20, 16);
 
 const statusText = new PIXI.Text({ text: 'Status: connecting...', style: statusStyle });
+statusText.label = 'statusText';
 statusText.position.set(20, 44);
 
 const contentContainer = new PIXI.Container();
+contentContainer.label = 'contentContainer';
 contentContainer.position.set(20, 80);
 
 const lines: InstanceType<typeof PIXI.Text>[] = [];
@@ -129,11 +150,13 @@ function connect(): void {
 
 async function start(): Promise<void> {
   await initPixi();
+  app.stage.label = 'Application Stage';
   app.stage.addChild(titleText);
   app.stage.addChild(statusText);
   app.stage.addChild(contentContainer);
   renderPayload();
   connect();
+  initStuff();
 }
 
 start();
