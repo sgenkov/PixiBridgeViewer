@@ -1,8 +1,11 @@
+import { Text } from "pixi.js";
 import { titleStyle, statusStyle, valueStyle } from "./config.js";
-import { stringifyValue } from "./utils.js";
+import { IDTO } from "./interfaces/Interfaces.js";
+import { setStatus, stringifyValue } from "./utils.js";
 
+const lines: InstanceType<typeof PIXI.Text>[] = [];
+const payloadMap = new Map<string, any>();
 const app = new PIXI.Application();
-(window as any)['__PIXI_APP__'] = app;
 
 async function initPixi(): Promise<void> {
   await app.init({
@@ -10,6 +13,7 @@ async function initPixi(): Promise<void> {
     resizeTo: window,
     antialias: true,
   });
+  (window as any)['__PIXI_APP__'] = app;
 
   const root = document.getElementById('app');
   if (!root) {
@@ -23,81 +27,48 @@ async function initPixi(): Promise<void> {
   });
 }
 
-function layout(e?: any): void {
-  app.stage.scale.set(app.canvas.width / 800);
-  // const { width } = app.screen;
-  // const titleX = Math.max(20, (width - titleText.width) / 2);
-  // const statusX = Math.max(20, (width - statusText.width) / 2);
-
-  // titleText.position.set(titleX, 16);
-  // statusText.position.set(statusX, 44);
-  // contentContainer.position.set(20, 80);
-
-}
-
-function initStuff(): void {
-  app.renderer.on('resize', (e) => layout(e));
-  layout();
-}
-
-
 const titleText = new PIXI.Text({ text: 'Pixi Bridge Viewer', style: titleStyle });
 titleText.label = 'titleText';
 titleText.position.set(20, 16);
 
-const statusText = new PIXI.Text({ text: 'Status: connecting...', style: statusStyle });
+const statusText: Text = new PIXI.Text({ text: 'Status: connecting...', style: statusStyle });
 statusText.label = 'statusText';
-statusText.position.set(20, 44);
+statusText.position.set(20, 60);
 
 const contentContainer = new PIXI.Container();
 contentContainer.label = 'contentContainer';
-contentContainer.position.set(20, 80);
+contentContainer.position.set(20, 94);
 
-const lines: InstanceType<typeof PIXI.Text>[] = [];
-const payloadMap = new Map<string, unknown>();
-
-function setStatus(text: string, ok: boolean): void {
-  statusText.text = `Status: ${text}`;
-  statusText.style = new PIXI.TextStyle({
-    ...statusText.style,
-    fill: ok ? '#7cf4c7' : '#ff9090',
-  });
-}
-
-// function stringifyValue(value: unknown): string {
-//   if (value === null || value === undefined) {
-//     return String(value);
-//   }
-//   if (typeof value === 'object') {
-//     return JSON.stringify(value);
-//   }
-//   return String(value);
-// }
-
-function mergePayload(payload: Record<string, unknown> | null): void {
+function mergePayload(payload: IDTO[]): void {
+  console.log('mergePayload', payload);
   if (!payload) {
     return;
   }
-  if (Object.prototype.hasOwnProperty.call(payload, 'refresh')) {
-    payloadMap.clear();
-  }
-  for (const [key, value] of Object.entries(payload)) {
-    if (key === 'refresh') {
+  for (const {name, value, refresh} of payload) {
+    if (refresh) {
       continue;
     }
-    if (value === null) {
-      payloadMap.delete(key);
+    if (name && value === null) {
+      payloadMap.delete(name);
       continue;
     }
 
-    payloadMap.set(key, value);
+    if (name) {
+      payloadMap.set(name, value);
+    }
   }
 }
 
 function renderPayload(): void {
   const entries = Array.from(payloadMap.entries());
+  console.log('ENTR', entries);
   const list: string[] = entries.length
-    ? entries.map(([key, value]) => `${key}: ${stringifyValue(value)}`)
+    ? entries.map(([key, entry]) => {
+      const displayValue = Object.prototype.hasOwnProperty.call(entry, 'value')
+        ? entry.value
+        : entry;
+      return `${key}: ${stringifyValue(displayValue)}`;
+    })
     : ['No payload received yet'];
 
   while (lines.length < list.length) {
@@ -124,15 +95,16 @@ function connect(): void {
   const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
   const socket = new WebSocket(wsUrl);
 
-  socket.addEventListener('open', () => setStatus('connected', true));
-  socket.addEventListener('close', () => setStatus('disconnected', false));
-  socket.addEventListener('error', () => setStatus('error', false));
+  socket.addEventListener('open', () => setStatus(statusText, 'connected', true));
+  socket.addEventListener('close', () => setStatus(statusText, 'disconnected', false));
+  socket.addEventListener('error', () => setStatus(statusText, 'error', false));
 
-  socket.addEventListener('message', (event) => {
+  socket.addEventListener('message', ({data}: {data: string}) => {
     try {
-      const data = JSON.parse(event.data);
-      if (data && data.payload) {
-        mergePayload(data.payload as Record<string, unknown>);
+      const {payload} = JSON.parse(data);
+      console.log('message', data);
+      if (payload) {
+        mergePayload(payload);
         renderPayload();
       }
     } catch {
@@ -140,7 +112,14 @@ function connect(): void {
     }
   });
 }
+function layout(e?: any): void {
+  app.stage.scale.set(app.canvas.width / 800);
+}
 
+function initStuff(): void {
+  app.renderer.on('resize', (e) => layout(e));
+  layout();
+}
 async function start(): Promise<void> {
   await initPixi();
   app.stage.label = 'Application Stage';

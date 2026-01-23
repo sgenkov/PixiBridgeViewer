@@ -71,3 +71,11 @@ export function stringifyValue(value: unknown): string {
     }
     return String(value);
   }
+
+  export function setStatus(statusText: InstanceType<typeof PIXI.Text>, text: string, ok: boolean): void {
+    statusText.text = `Status: ${text}`;
+    statusText.style = new PIXI.TextStyle({
+      ...statusText.style,
+      fill: ok ? '#7cf4c7' : '#ff9090',
+    });
+  }
