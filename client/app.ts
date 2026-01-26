@@ -1,10 +1,10 @@
 import { Text } from "pixi.js";
-import { titleStyle, statusStyle, valueStyle } from "./config.js";
+import { titleTextStyle, statusTextStyle, valueTextStyle } from "./config.js";
 import { IDTO } from "./interfaces/Interfaces.js";
 import { setStatus, stringifyValue } from "./utils.js";
 
 const lines: InstanceType<typeof PIXI.Text>[] = [];
-const payloadMap = new Map<string, any>();
+const payloadMap = new Map<string, IDTO>();
 const app = new PIXI.Application();
 
 async function initPixi(): Promise<void> {
@@ -27,11 +27,11 @@ async function initPixi(): Promise<void> {
   });
 }
 
-const titleText = new PIXI.Text({ text: 'Pixi Bridge Viewer', style: titleStyle });
+const titleText = new PIXI.Text({ text: 'Pixi Bridge Viewer', style: titleTextStyle });
 titleText.label = 'titleText';
 titleText.position.set(20, 16);
 
-const statusText: Text = new PIXI.Text({ text: 'Status: connecting...', style: statusStyle });
+const statusText: Text = new PIXI.Text({ text: 'Status: connecting...', style: statusTextStyle });
 statusText.label = 'statusText';
 statusText.position.set(20, 60);
 
@@ -40,11 +40,15 @@ contentContainer.label = 'contentContainer';
 contentContainer.position.set(20, 94);
 
 function mergePayload(payload: IDTO[]): void {
-  console.log('mergePayload', payload);
   if (!payload) {
     return;
   }
-  for (const {name, value, refresh} of payload) {
+  for (const entry of payload) {
+    if (entry?.textStyle) {
+      const parsedStyle: InstanceType<typeof PIXI.TextStyle> = JSON.parse(entry.textStyle);
+      entry.textStyle = parsedStyle;
+    }
+    const {name, value, refresh} = entry;
     if (refresh) {
       continue;
     }
@@ -54,14 +58,13 @@ function mergePayload(payload: IDTO[]): void {
     }
 
     if (name) {
-      payloadMap.set(name, value);
+      payloadMap.set(name, entry);
     }
   }
 }
 
 function renderPayload(): void {
   const entries = Array.from(payloadMap.entries());
-  console.log('ENTR', entries);
   const list: string[] = entries.length
     ? entries.map(([key, entry]) => {
       const displayValue = Object.prototype.hasOwnProperty.call(entry, 'value')
@@ -71,16 +74,20 @@ function renderPayload(): void {
     })
     : ['No payload received yet'];
 
+
   while (lines.length < list.length) {
-    const text = new PIXI.Text({ text: '', style: valueStyle });
+    const text = new PIXI.Text({ text: '', style: valueTextStyle });
     contentContainer.addChild(text);
     lines.push(text);
   }
 
+
   for (let i = 0; i < lines.length; i += 1) {
+    const sttyyllee = entries[i]?.[1]?.textStyle;
     const line = lines[i];
     if (i < list.length) {
       line.text = list[i];
+      line.style = Object.assign(new PIXI.TextStyle(valueTextStyle), sttyyllee);
       line.visible = true;
       const prevLine = lines[i - 1];
       const heightOffset: number = prevLine?.height || 0;
@@ -102,7 +109,6 @@ function connect(): void {
   socket.addEventListener('message', ({data}: {data: string}) => {
     try {
       const {payload} = JSON.parse(data);
-      console.log('message', data);
       if (payload) {
         mergePayload(payload);
         renderPayload();
