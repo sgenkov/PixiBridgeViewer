@@ -48,14 +48,15 @@ function mergePayload(payload: IDTO[]): void {
       const parsedStyle: InstanceType<typeof PIXI.TextStyle> = JSON.parse(entry.textStyle);
       entry.textStyle = parsedStyle;
     }
-    const {name, value, refresh} = entry;
+    const {name, refresh} = entry;
     if (refresh) {
+      payloadMap.clear();
       continue;
     }
-    if (name && value === null) {
-      payloadMap.delete(name);
-      continue;
-    }
+    // if (name && value === null) {
+    //   payloadMap.delete(name);
+    //   continue;
+    // }
 
     if (name) {
       payloadMap.set(name, entry);
