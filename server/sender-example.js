@@ -13,18 +13,18 @@ socket.on('open', () => {
 
   const interval = setInterval(() => {
     counter += 1;
-    const payload = {
+    const message = {
       type: 'paramsUpdate',
-      payload: {
-        mode: ['BASE', 'FREE_SPINS', 'SUPER_FREE_SPINS', 'MEGA_FREE_SPINS'][randomInt(0, 3)],
-        multiplier: randomInt(1, 20),
-        reel: randomInt(0, 5),
-        symbol: ['scatter', 'multiplier', 'wild'][randomInt(0, 2)],
-        counter
-      },
+      payload: [
+        { name: 'mode', value: ['BASE', 'FREE_SPINS', 'SUPER_FREE_SPINS', 'MEGA_FREE_SPINS'][randomInt(0, 3)] },
+        { name: 'multiplier', value: randomInt(1, 20) },
+        { name: 'reel', value: randomInt(0, 5) },
+        { name: 'symbol', value: ['scatter', 'multiplier', 'wild'][randomInt(0, 2)] },
+        { name: 'counter', value: counter }
+      ],
       ts: Date.now()
     };
-    socket.send(JSON.stringify(payload));
+    socket.send(JSON.stringify(message));
   }, 1000);
 
   socket.on('close', () => clearInterval(interval));

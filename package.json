@@ -7,12 +7,20 @@
     "start": "node server/index.js",
     "send": "node server/sender-example.js",
     "build": "tsc -p client/tsconfig.json",
-    "watch": "tsc -p client/tsconfig.json --watch"
+    "watch": "tsc -p client/tsconfig.json --watch",
+    "switch:pixi": "node switch-renderer.js pixi",
+    "switch:react": "node switch-renderer.js react",
+    "dev:pixi": "npm run switch:pixi && npm run dev",
+    "dev:react": "npm run switch:react && npm run dev"
   },
   "dependencies": {
     "@types/pixi.js": "^5.0.0",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
     "@types/ws": "^8.18.1",
     "pixi.js": "^8.15.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {
